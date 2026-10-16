@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전국 수학 랭커 2단원: 분수의 곱셈</title>
+  
+  <!-- 구글 파이어베이스 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script>
+    if (typeof firebase === 'undefined' || !firebase.database) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"><\/script>');
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"><\/script>');
+    }
+  </script>
+
+  <style>
+    :root {
+      --primary: #8B5CF6;
+      --secondary: #EC4899;
+      --danger: #EF4444;
+      --success: #10B981;
+      --bg: #0F172A;
+      --card-bg: #1E293B;
+      --text: #F8FAFC;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 650px;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4C1D95, #7C3AED);
+      padding: 20px;
+      text-align: center;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      cursor: pointer;
+    }
+
+    header h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
+    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10B981;
+      color: #34D399;
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .tab-nav {
+      display: flex;
+      background: #0F172A;
+      border-bottom: 1px solid #334155;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 10px;
+      border: none;
+      background: transparent;
+      color: #94A3B8;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: #A78BFA;
+      background: #1E293B;
+      border-bottom: 3px solid #8B5CF6;
+    }
+
+    .content-area {
+      padding: 24px 20px;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .mode-card {
+      background: #0F172A;
+      border: 2px solid #334155;
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .mode-card:hover {
+      border-color: #A78BFA;
+      transform: translateY(-2px);
+      background: #162032;
+    }
+
+    .mode-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mode-card p {
+      font-size: 0.85rem;
+      color: #94A3B8;
+      line-height: 1.4;
+    }
+
+    .mode-badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .q-badge { font-size: 1.05rem; font-weight: 900; color: #A78BFA; }
+    .score-board { text-align: right; }
+    .score-val { font-size: 1.5rem; font-weight: 900; color: #FACC15; }
+    .combo-badge { font-size: 0.8rem; color: #EC4899; font-weight: 800; }
+
+    .timer-container {
+      width: 100%;
+      height: 8px;
+      background: #334155;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #10B981, #F59E0B, #EF4444);
+    }
+    .timer-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #94A3B8;
+      margin-bottom: 14px;
+      font-weight: bold;
+    }
+
+    .question-box {
+      background: #0F172A;
+      border: 2px solid #334155;
+      border-radius: 18px;
+      padding: 22px 18px;
+      text-align: center;
+      margin-bottom: 18px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+    .question-category {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #7C3AED;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 3px 12px;
+      border-radius: 20px;
+    }
+    .question-text { font-size: 1.25rem; font-weight: 700; line-height: 1.6; }
+
+    .frac {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 4px;
+      font-weight: bold;
+    }
+    .frac-whole {
+      font-size: 1.15em;
+      margin-right: 3px;
+    }
+    .frac-body {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 0.85em;
+      line-height: 1.1;
+    }
+    .frac-num {
+      border-bottom: 2px solid currentColor;
+      padding-bottom: 1px;
+    }
+    .frac-den {
+      padding-top: 1px;
+    }
+
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .opt-btn {
+      background: #334155;
+      color: white;
+      border: 2px solid #475569;
+      border-radius: 14px;
+      padding: 16px 8px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.08s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60px;
+    }
+    .opt-btn:hover { background: #475569; border-color: #A78BFA; }
+    .opt-btn:active { transform: scale(0.96); }
+
+    .opt-btn.correct-glow {
+      background: #10B981 !important;
+      border-color: #34D399 !important;
+      color: white !important;
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+    }
+
+    .opt-btn.wrong-glow {
+      background: #EF4444 !important;
+      border-color: #F87171 !important;
+      color: white !important;
+      transform: scale(0.98);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    }
+
+    .feedback-toast {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .score-up { background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981; color: #34D399; }
+    .score-down { background: rgba(239, 68, 68, 0.2); border: 1px solid #EF4444; color: #F87171; }
+
+    .result-box { text-align: center; width: 100%; }
+    .rank-stamp {
+      font-size: 3.8rem;
+      font-weight: 900;
+      color: #FACC15;
+      text-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+      margin-bottom: 6px;
+    }
+
+    .dual-rank-card {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .rank-sub-box {
+      flex: 1;
+      background: #0F172A;
+      border: 1px solid #8B5CF6;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .rank-sub-title { font-size: 0.8rem; color: #94A3B8; margin-bottom: 4px; }
+    .rank-sub-val { font-size: 1.35rem; font-weight: 900; }
+
+    .stat-list {
+      background: #0F172A;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      text-align: left;
+      font-size: 0.92rem;
+      border: 1px solid #334155;
+    }
+    .stat-list div { display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-box {
+      background: #1E293B;
+      border: 2px solid #8B5CF6;
+      border-radius: 20px;
+      padding: 22px 20px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    .modal-label {
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #94A3B8;
+      margin: 8px 0 4px 2px;
+    }
+    .custom-select, .nick-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 2px solid #475569;
+      background: #0F172A;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      transition: all 0.2s;
+    }
+    .custom-select:focus, .nick-input:focus { outline: none; border-color: #8B5CF6; }
+
+    .btn-action {
+      width: 100%;
+      padding: 14px;
+      background: #7C3AED;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-action:hover { background: #6D28D9; }
+
+    .wrong-note-container {
+      background: #0F172A;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 8px 0 16px 0;
+      max-height: 400px;
+      overflow-y: auto;
+      text-align: left;
+      border: 2px solid #334155;
+    }
+    .wrong-item {
+      background: #1E293B;
+      border-left: 4px solid #EF4444;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .wrong-item:last-child { margin-bottom: 0; }
+    .wrong-q-txt { font-weight: bold; color: #F8FAFC; margin-bottom: 8px; line-height: 1.5; font-size: 1rem; }
+    .wrong-ans-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; }
+    .wrong-tip-txt { color: #94A3B8; background: #0F172A; padding: 8px 10px; border-radius: 6px; margin-top: 6px; font-size: 0.82rem; line-height: 1.4; }
+
+    .region-chips-wrapper {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      scrollbar-width: thin;
+    }
+    .region-chip {
+      padding: 7px 13px;
+      background: #0F172A;
+      border: 1px solid #334155;
+      color: #94A3B8;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .region-chip:hover {
+      border-color: #8B5CF6;
+      color: white;
+    }
+    .region-chip.active {
+      background: #7C3AED;
+      border-color: #A78BFA;
+      color: white;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+    }
+
+    .hof-card {
+      background: #0F172A;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+    .hof-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 6px;
+      border-bottom: 1px solid #1E293B;
+    }
+    .hof-row:last-child { border-bottom: none; }
+    .hof-rank { font-weight: 900; font-size: 0.95rem; width: 45px; }
+    .hof-region-tag {
+      background: #4C1D95;
+      color: #DDD6FE;
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-right: 6px;
+      font-weight: bold;
+    }
+    .hof-name { flex: 1; font-weight: bold; font-size: 0.95rem; }
+    .hof-score { color: #FACC15; font-weight: 800; font-size: 1rem; }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ★ 상단 헤더: 연속 5번 클릭 시 관리자 모드 실행 -->
+  <header>
+    <h1>⚡ 전국 수학 랭커 2단원: 분수의 곱셈</h1>
+    <p>약분과 분수 곱셈의 마스터가 되어 100위에 도전하세요!</p>
+    <div class="live-indicator">
+      <div class="live-dot"></div>
+      <span id="conn-status">2단원 보안 금고 연동 완료!</span>
+    </div>
+  </header>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('game')">🎮 게임 모드</button>
+    <button class="tab-btn" onclick="switchTab('hof')">🏆 명예의 전당 (TOP 100)</button>
+    <button class="tab-btn" onclick="switchTab('dict')">📖 핵심 개념</button>
+  </div>
+
+  <div id="tab-game" class="content-area">
+    <div id="view-intro">
+      <h3 style="text-align: center; color: #F8FAFC; margin-bottom: 16px;">도전할 모드를 선택하세요!</h3>
+
+      <div class="mode-card" onclick="selectAndStartMode(1)">
+        <h3>
+          <span style="color:#34D399;">🟢 1모드: 오직 분수 연산만 (20제)</span>
+          <span class="mode-badge" style="background: rgba(52, 211, 153, 0.2); color: #34D399;">생각시간 30초</span>
+        </h3>
+        <p>진분수, 대분수, 자연수의 곱셈과 대분수×대분수까지! 6대 연산 유형을 20문제로 차분하게 훈련합니다. (랭킹 X)</p>
+      </div>
+
+      <div class="mode-card" onclick="selectAndStartMode(2)">
+        <h3>
+          <span style="color:#FBBF24;">🟡 2모드: 오직 실생활 문장제만 (15제)</span>
+          <span class="mode-badge" style="background: rgba(251, 191, 36, 0.2); color: #FBBF24;">생각시간 40초</span>
+        </h3>
+        <p>22가지 실생활 문제 풀! 중복 없이 완전히 새로운 숫자와 문제로 출제됩니다. (랭킹 X)</p>
+      </div>
+
+      <div class="mode-card" style="border-color: #8B5CF6;" onclick="openAuthModal()">
+        <h3>
+          <span style="color:#A78BFA;">🔥 3모드: 전국 & 지역 랭킹 배틀 (20제)</span>
+          <span class="mode-badge" style="background: rgba(139, 92, 246, 0.2); color: #A78BFA;">스피드 30초 | 🏆 랭킹전</span>
+        </h3>
+        <p><b>영문·숫자 4~10자 ID</b>로 나만의 계정 보호! 연산+문장제 20문제를 풀고 <b>내 최고 기록</b>에 도전하세요!</p>
+      </div>
+    </div>
+
+    <div id="view-play" style="display: none;">
+      <div class="game-header">
+        <div class="q-badge"><span id="mode-title-badge"></span> 문제 <span id="cur-q">1</span> / <span id="total-q">20</span></div>
+        <div class="score-board">
+          <div class="score-val" id="cur-score">0점</div>
+          <div class="combo-badge" id="cur-combo"></div>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+      <div class="timer-info-row">
+        <span>⏱️ 남은 시간: <b id="val-timer-sec">30초</b></span>
+        <span style="color:#34D399;">⚡ 스피드 보너스 <b id="val-speed-bonus">+100점</b> 대기 중!</span>
+      </div>
+
+      <div class="question-box">
+        <span class="question-category" id="q-tag">태그</span>
+        <div class="question-text" id="q-text">문제가 로딩 중입니다...</div>
+      </div>
+
+      <div class="options-grid" id="opt-container"></div>
+      <div id="feedback-bar" class="feedback-toast" style="display: none;"></div>
+    </div>
+
+    <div id="view-result" class="result-box" style="display: none;">
+      <h2>게임 완료!</h2>
+      <div class="rank-stamp" id="res-rank">S</div>
+
+      <div id="dual-rank-section" class="dual-rank-card" style="display: none;">
+        <div class="rank-sub-box">
+          <div class="rank-sub-title">🌏 전국 순위</div>
+          <div class="rank-sub-val" id="res-nat-rank" style="color:#FACC15;">-</div>
+        </div>
+        <div class="rank-sub-box">
+          <div class="rank-sub-title"><span id="res-my-region">내 지역</span> 순위</div>
+          <div class="rank-sub-val" id="res-reg-rank" style="color:#A78BFA;">-</div>
+        </div>
+      </div>
+
+      <div class="stat-list">
+        <div><span>플레이어</span><b id="res-name" style="color:#38BDF8;">익명</b></div>
+        <div><span>🎯 맞힌 문제</span><b id="res-correct-txt">0 / 20 (기본 0점)</b></div>
+        <div><span>⚡ 총 스피드 보너스</span><b id="res-speed-txt" style="color:#34D399;">+0점 (평균 0초)</b></div>
+        <div><span>🔥 콤보 보너스</span><b id="res-combo-txt" style="color:#EC4899;">+0점</b></div>
+        <div><span>❌ 오답 감점</span><b id="res-penalty-txt" style="color:#F87171;">-0점</b></div>
+        <hr style="border-color:#334155; margin:6px 0;">
+        <div style="font-size:1.05rem;"><span>🏆 이번 판 최종 점수</span><b id="res-score" style="color:#FACC15;">0점</b></div>
+        <div><span>⭐ 내 최고 점수 기록</span><b id="res-best" style="color:#38BDF8;">0점</b></div>
+      </div>
+
+      <div id="wrong-note-section">
+        <h4 id="wrong-note-title" style="text-align: left; color: #F87171; margin-bottom: 6px; font-size: 1.05rem;">📝 오답노트</h4>
+        <div class="wrong-note-container" id="wrong-note-list"></div>
+      </div>
+
+      <div id="practice-complete-msg" class="practice-notice" style="display: none; background: rgba(139, 92, 246, 0.15); border: 1px solid #8B5CF6; border-radius: 12px; padding: 12px; margin: 15px 0; font-size: 0.9rem; color: #DDD6FE;">
+        💡 <b>연습 모드 완료!</b><br>
+        실력을 충분히 다지셨나요? <b>[3모드 전국 & 지역 랭킹 배틀]</b>에서 최고 점수에 도전해 보세요!
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn-action" style="background:#475569;" onclick="resetGame()">메인 메뉴</button>
+        <button id="btn-see-hof" class="btn-action" style="background:#F59E0B; display:none;" onclick="goToHofAfterGame()">🏆 명예의 전당 가기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-auth" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <h3 style="color:#A78BFA; margin-bottom: 2px;">🔥 3모드 출전 로그인</h3>
+      <p style="font-size:0.8rem; color:#CBD5E1; margin-bottom:12px;">아이디와 비밀번호를 치면 닉네임이 자동으로 채워집니다!</p>
+      
+      <div style="display:flex; gap:8px;">
+        <div style="flex:1.2;">
+          <div class="modal-label">🔑 아이디 (영문·숫자 4~10자)</div>
+          <input type="text" id="auth-id" class="nick-input" placeholder="예: math1, hero77" maxlength="10" oninput="handleAuthInput()">
+        </div>
+        <div style="flex:0.8;">
+          <div class="modal-label">🔒 비밀번호 (숫자 4자리)</div>
+          <input type="password" id="auth-pw" class="nick-input" placeholder="예: 1234" maxlength="4" oninput="handleAuthInput()">
+        </div>
+      </div>
+
+      <div id="auth-status-msg" style="font-size:0.82rem; min-height:20px; margin: 2px 0 6px 2px; text-align:left; font-weight:bold; color:#A78BFA;"></div>
+
+      <div class="modal-label">🏷️ 닉네임 (한글·숫자 1~4자)</div>
+      <input type="text" id="auth-nick" class="nick-input" placeholder="예: 분수왕" maxlength="4">
+      
+      <div style="font-size: 0.76rem; color: #F87171; text-align: left; margin: -2px 0 8px 2px; line-height: 1.35; font-weight: bold;">
+        ⚠️ 닉네임은 최초 등록 후 <u>변경이 불가능</u>하니 신중히 정해주세요!<br>(비속어·욕설 사용 시 계정 즉시 삭제)
+      </div>
+
+      <div class="modal-label">📍 내 지역</div>
+      <select id="auth-region" class="custom-select">
+        <option value="서울">서울</option>
+        <option value="경기">경기</option>
+        <option value="인천">인천</option>
+        <option value="부산" selected>부산</option>
+        <option value="대구">대구</option>
+        <option value="광주">광주</option>
+        <option value="대전">대전</option>
+        <option value="울산">울산</option>
+        <option value="세종">세종</option>
+        <option value="강원">강원</option>
+        <option value="충북">충북</option>
+        <option value="충남">충남</option>
+        <option value="전북">전북</option>
+        <option value="전남">전남</option>
+        <option value="경북">경북</option>
+        <option value="경남">경남</option>
+        <option value="제주">제주</option>
+      </select>
+
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="btn-action" style="background:#475569;" onclick="closeAuthModal()">취소</button>
+        <button class="btn-action" id="btn-submit-auth" onclick="verifyAccountAndStart()">출전하기 (GO!)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-hof" class="content-area" style="display: none;">
+    <h3 style="text-align: center; color:#FACC15; margin-bottom: 8px;">🏆 2단원 실시간 명예의 전당 (TOP 100)</h3>
+    <div id="hof-viewing-title" style="text-align: center; color: #A78BFA; font-size: 0.9rem; font-weight: bold; margin-bottom: 12px;">
+      🌏 전국 전체 순위 (TOP 100)
+    </div>
+    
+
+    <div class="region-chips-wrapper" id="region-chips-container">
+      <button class="region-chip active" onclick="setHofRegion('ALL')">🌏 전국</button>
+      <button class="region-chip" onclick="setHofRegion('서울')">서울</button>
+      <button class="region-chip" onclick="setHofRegion('경기')">경기</button>
+      <button class="region-chip" onclick="setHofRegion('인천')">인천</button>
+      <button class="region-chip" onclick="setHofRegion('부산')">부산</button>
+      <button class="region-chip" onclick="setHofRegion('대구')">대구</button>
+      <button class="region-chip" onclick="setHofRegion('광주')">광주</button>
+      <button class="region-chip" onclick="setHofRegion('대전')">대전</button>
+      <button class="region-chip" onclick="setHofRegion('울산')">울산</button>
+      <button class="region-chip" onclick="setHofRegion('세종')">세종</button>
+      <button class="region-chip" onclick="setHofRegion('강원')">강원</button>
+      <button class="region-chip" onclick="setHofRegion('충북')">충북</button>
+      <button class="region-chip" onclick="setHofRegion('충남')">충남</button>
+      <button class="region-chip" onclick="setHofRegion('전북')">전북</button>
+      <button class="region-chip" onclick="setHofRegion('전남')">전남</button>
+      <button class="region-chip" onclick="setHofRegion('경북')">경북</button>
+      <button class="region-chip" onclick="setHofRegion('경남')">경남</button>
+      <button class="region-chip" onclick="setHofRegion('제주')">제주</button>
+    </div>
+
+    <select id="hof-region-filter" class="custom-select" style="margin-bottom: 10px; font-size:0.9rem;" onchange="setHofRegion(this.value)">
+      <option value="ALL">🌏 전국 전체 (TOP 100)</option>
+      <option value="서울">서울 지역 (TOP 100)</option>
+      <option value="경기">경기 지역 (TOP 100)</option>
+      <option value="인천">인천 지역 (TOP 100)</option>
+      <option value="부산">부산 지역 (TOP 100)</option>
+      <option value="대구">대구 지역 (TOP 100)</option>
+      <option value="광주">광주 지역 (TOP 100)</option>
+      <option value="대전">대전 지역 (TOP 100)</option>
+      <option value="울산">울산 지역 (TOP 100)</option>
+      <option value="세종">세종 지역 (TOP 100)</option>
+      <option value="강원">강원 지역 (TOP 100)</option>
+      <option value="충북">충북 지역 (TOP 100)</option>
+      <option value="충남">충남 지역 (TOP 100)</option>
+      <option value="전북">전북 지역 (TOP 100)</option>
+      <option value="전남">전남 지역 (TOP 100)</option>
+      <option value="경북">경북 지역 (TOP 100)</option>
+      <option value="경남">경남 지역 (TOP 100)</option>
+      <option value="제주">제주 지역 (TOP 100)</option>
+    </select>
+
+    <div class="hof-card" id="hof-list"></div>
+  </div>
+
+  <div id="tab-dict" class="content-area" style="display: none;">
+    <div style="font-size: 0.9rem; line-height: 1.7; color:#CBD5E1;">
+      <p><b>🔹 분수 × 자연수:</b> 분자와 자연수를 곱하고 분모는 그대로 둡니다.</p>
+      <p><b>🔹 분수 × 분수:</b> 분모는 분모끼리, 분자는 분자끼리 곱합니다.</p>
+      <p><b>🔹 대분수의 곱셈:</b> 대분수를 반드시 <b>가분수로 바꾼 뒤</b> 계산합니다!</p>
+      <p><b>🔹 계산 꿀팁 (약분):</b> 곱하기 전에 <b>대각선이나 위아래로 먼저 약분</b>하면 계산이 훨씬 빠르고 실수가 없습니다!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ========================================================================
+     Firebase 설정 (기존 랭킹 방: ch2_users / ch2_rank_all / ch2_rank_regions)
+  ======================================================================== */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKnvmdFG7A2PP8FCmTSgDLVjCf5FJ34_I",
+    authDomain: "math30-163fd.firebaseapp.com",
+    databaseURL: "https://math30-163fd-default-rtdb.firebaseio.com",
+    projectId: "math30-163fd",
+    storageBucket: "math30-163fd.firebasestorage.app",
+    messagingSenderId: "345277070711",
+    appId: "1:345277070711:web:5fb50e1fc1409fa8e9b572",
+    measurementId: "G-9HS5KJJL0M"
+  };
+
+
+  let db = null;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch (e) {
+    console.warn('Firebase 로드 실패 - 오프라인 모드로 실행합니다.', e);
+  }
+  // 서버 연결 상태를 헤더에 실시간 표시
+  if (db) {
+    db.ref('.info/connected').on('value', snap => {
+      const st = document.getElementById('conn-status');
+      if (!st) return;
+      if (snap.val() === true) {
+        st.innerText = '랭킹 서버 연결됨 ✅';
+        st.style.color = '#34D399';
+      } else {
+        st.innerText = '랭킹 서버 연결 중... (계속되면 네트워크 확인)';
+        st.style.color = '#FBBF24';
+      }
+    });
+  }
+  const OFFLINE_MSG = '⚠️ 랭킹 서버(Firebase)에 연결할 수 없습니다. 인터넷/네트워크 차단 여부를 확인해 주세요.';
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let actx = null;
+  function playSound(type) {
+    try {
+      if (!actx) actx = new AudioCtx();
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      const now = actx.currentTime;
+
+      if (type === 'correct') {
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(783.99, now + 0.06);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      }
+    } catch(e) {}
+  }
+
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function formatFrac(whole, num, den) {
+    if (num === 0) return `${whole}`;
+    if (whole === 0) {
+      return `<span class="frac"><span class="frac-body"><span class="frac-num">${num}</span><span class="frac-den">${den}</span></span></span>`;
+    }
+    return `<span class="frac"><span class="frac-whole">${whole}</span><span class="frac-body"><span class="frac-num">${num}</span><span class="frac-den">${den}</span></span></span>`;
+  }
+
+  function simplifyToHtml(num, den) {
+    if (den === 1) return `${num}`;
+    const g = gcd(num, den);
+    num = num / g;
+    den = den / g;
+
+    if (den === 1) return `${num}`;
+    const whole = Math.floor(num / den);
+    const rem = num % den;
+    return formatFrac(whole, rem, den);
+  }
+
+  // 1. 연산 6대 유형 생성기
+  function genFractionCalcQ() {
+    const types = ['proper_nat', 'mixed_nat', 'nat_proper', 'nat_mixed', 'proper_proper', 'mixed_mixed'];
+    const type = types[rand(0, types.length - 1)];
+
+    let qText, correctHtml, wrongs = new Set();
+    let ansNum, ansDen;
+
+    if (type === 'proper_nat') {
+      const den = [4, 6, 7, 8, 12, 15, 20][rand(0, 6)];
+      const num = rand(1, den - 1);
+      const nat = [3, 4, 5, 6, 10, 15][rand(0, 5)];
+
+      ansNum = num * nat;
+      ansDen = den;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${formatFrac(0, num, den)} × ${nat} 의 값은?`;
+
+      wrongs.add(simplifyToHtml(num * nat, den * nat));
+      wrongs.add(simplifyToHtml(num, den));
+      wrongs.add(simplifyToHtml(num * nat + 1, den));
+      wrongs.add(simplifyToHtml(Math.max(1, num * nat - 1), den));
+    } else if (type === 'mixed_nat') {
+      const whole = rand(1, 2);
+      const den = [3, 4, 5, 6][rand(0, 3)];
+      const num = rand(1, den - 1);
+      const nat = [3, 4, 6, 9, 10][rand(0, 4)];
+
+      const improperNum = whole * den + num;
+      ansNum = improperNum * nat;
+      ansDen = den;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${formatFrac(whole, num, den)} × ${nat} 의 값은?`;
+
+      wrongs.add(simplifyToHtml(whole * nat * den + num, den));
+      wrongs.add(simplifyToHtml(ansNum + 2, ansDen));
+      wrongs.add(simplifyToHtml(Math.max(1, ansNum - 2), ansDen));
+    } else if (type === 'nat_proper') {
+      const nat = [6, 8, 10, 12, 16][rand(0, 4)];
+      const den = [2, 3, 4, 5, 9][rand(0, 4)];
+      const num = rand(1, den - 1);
+
+      ansNum = nat * num;
+      ansDen = den;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${nat} × ${formatFrac(0, num, den)} 의 값은?`;
+
+      wrongs.add(simplifyToHtml(num, den));
+      wrongs.add(simplifyToHtml(nat * num + 1, den));
+      wrongs.add(simplifyToHtml(Math.max(1, nat * num - 1), den));
+    } else if (type === 'nat_mixed') {
+      const nat = [4, 5, 6, 14][rand(0, 3)];
+      const whole = rand(1, 2);
+      const den = [3, 6, 9][rand(0, 2)];
+      const num = rand(1, den - 1);
+
+      const improperNum = whole * den + num;
+      ansNum = nat * improperNum;
+      ansDen = den;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${nat} × ${formatFrac(whole, num, den)} 의 값은?`;
+
+      wrongs.add(simplifyToHtml(nat * whole * den + num, den));
+      wrongs.add(simplifyToHtml(ansNum + 3, ansDen));
+      wrongs.add(simplifyToHtml(Math.max(1, ansNum - 3), ansDen));
+    } else if (type === 'proper_proper') {
+      const den1 = [3, 4, 6, 10, 15][rand(0, 4)];
+      const num1 = rand(1, den1 - 1);
+      const den2 = [4, 6, 7][rand(0, 2)];
+      const num2 = rand(1, den2 - 1);
+
+      ansNum = num1 * num2;
+      ansDen = den1 * den2;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${formatFrac(0, num1, den1)} × ${formatFrac(0, num2, den2)} 의 값은?`;
+
+      wrongs.add(simplifyToHtml(num1 + num2, den1 + den2));
+      wrongs.add(simplifyToHtml(ansNum + 1, ansDen));
+      wrongs.add(simplifyToHtml(ansNum, ansDen + 2));
+    } else {
+      const whole1 = rand(1, 2);
+      const den1 = [3, 5, 6][rand(0, 2)];
+      const num1 = rand(1, den1 - 1);
+
+      const whole2 = rand(1, 2);
+      const den2 = [3, 5, 7][rand(0, 2)];
+      const num2 = rand(1, den2 - 1);
+
+      const imp1 = whole1 * den1 + num1;
+      const imp2 = whole2 * den2 + num2;
+      ansNum = imp1 * imp2;
+      ansDen = den1 * den2;
+      correctHtml = simplifyToHtml(ansNum, ansDen);
+      qText = `${formatFrac(whole1, num1, den1)} × ${formatFrac(whole2, num2, den2)} 의 값은?`;
+
+      wrongs.add(formatFrac(whole1 * whole2, num1 * num2, den1 * den2));
+      wrongs.add(simplifyToHtml(ansNum + 2, ansDen));
+      wrongs.add(simplifyToHtml(Math.max(1, ansNum - 2), ansDen));
+    }
+
+    let opts = Array.from(wrongs).filter(w => w !== correctHtml);
+    let delta = 1;
+    while (opts.length < 3) {
+      opts.push(simplifyToHtml(ansNum + delta * 3, ansDen));
+      delta++;
+    }
+    opts = opts.slice(0, 3);
+    opts.push(correctHtml);
+    opts.sort(() => Math.random() - 0.5);
+
+    return {
+      tag: '분수 연산',
+      text: qText,
+      correct: correctHtml,
+      options: opts,
+      tip: '대분수는 반드시 가분수로 고친 후, 곱하기 전에 먼저 약분하세요!'
+    };
+  }
+
+  // 2. 22가지 대규모 문장제 생성기 (단위 완전 제거)
+  const wordQuestionGenerators = [
+    () => {
+      const den = [6, 8, 12, 15, 18][rand(0, 4)], num = rand(3, den - 1), count = [4, 6, 8, 10][rand(0, 3)];
+      const correct = simplifyToHtml(num * count, den);
+      const item = ['사탕', '젤리', '초콜릿', '과자'][rand(0, 3)];
+      const name = ['민정', '수호', '지우', '태윤'][rand(0, 3)];
+      return {
+        tag: '실생활 문장제',
+        text: `${name}이는 한 봉지에 ${formatFrac(0, num, den)}kg인 ${item}을 ${count}봉지 샀습니다. ${name}이가 산 ${item}의 전체 무게는 몇 kg일까요?`,
+        correct: correct,
+        options: [correct, simplifyToHtml(num, den), simplifyToHtml(num * count + 2, den), `${count}`].sort(() => Math.random() - 0.5),
+        tip: '한 봉지의 무게에 봉지 수를 곱해줍니다!'
+      };
+    },
+    () => {
+      const whole = rand(1, 2), den = [4, 5, 6][rand(0, 2)], num = rand(1, den - 1), count = rand(3, 5);
+      const correct = simplifyToHtml((whole * den + num) * count, den);
+      return {
+        tag: '실생활 문장제',
+        text: `길이가 ${formatFrac(whole, num, den)}m인 색 테이프 ${count}개를 겹치지 않게 길게 이어 붙였습니다. 이어 붙인 색 테이프의 전체 길이는 몇 m일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(whole * count, num, den), simplifyToHtml((whole * den + num) * count + 2, den), `${whole * count}`].sort(() => Math.random() - 0.5),
+        tip: '대분수를 가분수로 바꾼 뒤 개수를 곱합니다!'
+      };
+    },
+    () => {
+      const perMeter = [10, 12, 14, 16][rand(0, 3)];
+      const whole = rand(1, 2), den = [3, 4, 6][rand(0, 2)], num = rand(1, den - 1);
+      const correct = simplifyToHtml(perMeter * (whole * den + num), den);
+      return {
+        tag: '실생활 문장제',
+        text: `굵기가 일정한 통나무 1m의 무게는 ${perMeter}kg입니다. 이 통나무 ${formatFrac(whole, num, den)}m의 무게는 몇 kg일까요?`,
+        correct: correct,
+        options: [correct, `${perMeter * whole}`, simplifyToHtml(perMeter * (whole * den + num) + 2, den), `${perMeter + whole}`].sort(() => Math.random() - 0.5),
+        tip: '1m당 무게에 통나무의 총 길이를 곱합니다!'
+      };
+    },
+    () => {
+      const den1 = [3, 4, 5][rand(0, 2)], num1 = rand(2, den1 - 1);
+      const den2 = [5, 6, 7][rand(0, 2)], num2 = rand(2, den2 - 1);
+      const correct = simplifyToHtml(num1 * num2, den1 * den2);
+      const veg = ['오이', '토마토', '배추', '상추'][rand(0, 3)];
+      return {
+        tag: '실생활 문장제',
+        text: `텃밭의 ${formatFrac(0, num1, den1)}만큼 채소를 심었는데, 그중 ${formatFrac(0, num2, den2)}만큼이 ${veg}입니다. ${veg}를 심은 부분은 전체의 얼마인가요?`,
+        correct: correct,
+        options: [correct, formatFrac(0, num1, den1), formatFrac(0, num2, den2), simplifyToHtml(num1 + num2, den1 + den2)].sort(() => Math.random() - 0.5),
+        tip: '전체 중 채소의 비율과 채소 중 특정 작물의 비율을 곱합니다!'
+      };
+    },
+    () => {
+      const w1 = rand(1, 2), d1 = [3, 4, 5][rand(0, 2)], n1 = rand(1, d1 - 1);
+      const w2 = rand(1, 2), d2 = [2, 3, 5][rand(0, 2)], n2 = rand(1, d2 - 1);
+      const correct = simplifyToHtml((w1 * d1 + n1) * (w2 * d2 + n2), d1 * d2);
+      return {
+        tag: '실생활 문장제',
+        text: `가로가 ${formatFrac(w1, n1, d1)}m, 세로가 ${formatFrac(w2, n2, d2)}m인 직사각형 모양 화단의 넓이는 몇 ㎡일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(w1 * w2, n1 * n2, d1 * d2), simplifyToHtml((w1 * d1 + n1) * (w2 * d2 + n2) + 2, d1 * d2), `${w1 * w2}`].sort(() => Math.random() - 0.5),
+        tip: '직사각형 넓이 = 가로 × 세로 입니다. 대분수를 가분수로 바꿔 곱하세요!'
+      };
+    },
+    () => {
+      const w = rand(1, 2), d = [3, 4, 6][rand(0, 2)], n = rand(1, d - 1);
+      const correct = simplifyToHtml((w * d + n) * (w * d + n), d * d);
+      return {
+        tag: '실생활 문장제',
+        text: `한 변의 길이가 ${formatFrac(w, n, d)}cm인 정사각형 모양 색종이의 넓이는 몇 ㎠일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(w * w, n * n, d * d), formatFrac(w * w, n, d), `${w * w}`].sort(() => Math.random() - 0.5),
+        tip: '정사각형 넓이 = 한 변의 길이 × 한 변의 길이 입니다!'
+      };
+    },
+    () => {
+      const adultPrice = [4000, 5000, 6000, 8000][rand(0, 3)];
+      const den = [5, 10][rand(0, 1)], num = den === 5 ? 3 : 7;
+      const correct = `${(adultPrice * num / den).toLocaleString()}`;
+      const wrong1 = `${(adultPrice * (num - 1) / den).toLocaleString()}`;
+      const wrong2 = `${(adultPrice / 2).toLocaleString()}`;
+      return {
+        tag: '실생활 문장제',
+        text: `어느 동물원의 어른 입장료는 ${adultPrice.toLocaleString()}원이고, 어린이 입장료는 어른 입장료의 ${formatFrac(0, num, den)}입니다. 어린이 입장료는 얼마인가요?`,
+        correct: correct,
+        options: [correct, wrong1, wrong2, `${(adultPrice * 0.9).toLocaleString()}`].sort(() => Math.random() - 0.5),
+        tip: '어른 입장료에 비율을 곱해줍니다!'
+      };
+    },
+    () => {
+      const den1 = 15, num1 = 7, den2 = 7, num2 = [2, 3][rand(0, 1)];
+      const correct = simplifyToHtml(num1 * num2, den1 * den2);
+      return {
+        tag: '실생활 문장제',
+        text: `반 학생의 ${formatFrac(0, num1, den1)}은 여학생이고, 여학생의 ${formatFrac(0, num2, den2)}는 안경을 썼습니다. 안경을 쓴 여학생은 전체 학생의 얼마인가요?`,
+        correct: correct,
+        options: [correct, formatFrac(0, num1, den1), formatFrac(0, num2, den2), simplifyToHtml(num1 + num2, den1 + den2)].sort(() => Math.random() - 0.5),
+        tip: '대각선에 있는 7을 곱하기 전에 먼저 약분하세요!'
+      };
+    },
+    () => {
+      const base = [6, 8, 9, 12][rand(0, 3)];
+      const w = 1, d = [3, 4, 6][rand(0, 2)], n = 1;
+      const correct = simplifyToHtml(base * (w * d + n), d);
+      return {
+        tag: '실생활 문장제',
+        text: `어떤 수는 ${base}의 ${formatFrac(w, n, d)}배입니다. 어떤 수는 얼마인가요?`,
+        correct: correct,
+        options: [correct, formatFrac(base * w, n, d), simplifyToHtml(base * (w * d + n) + 2, d), `${base}`].sort(() => Math.random() - 0.5),
+        tip: '기준 수에 배수를 곱합니다!'
+      };
+    },
+    () => {
+      const total = rand(3, 4);
+      const den = [10, 15][rand(0, 1)], num = rand(3, 4), people = [5, 10][rand(0, 1)];
+      const givenNum = num * people;
+      const g = gcd(givenNum, den);
+      const redNum = givenNum / g;
+      const redDen = den / g;
+      const remNum = total * redDen - redNum;
+      const correct = simplifyToHtml(remNum, redDen);
+      return {
+        tag: '실생활 문장제',
+        text: `떡이 ${total}kg 있었는데 ${formatFrac(0, num, den)}kg씩 ${people}명에게 나누어 주었습니다. 남은 떡은 몇 kg일까요?`,
+        correct: correct,
+        options: [correct, simplifyToHtml(redNum, redDen), formatFrac(0, 1, 2), '1'].sort(() => Math.random() - 0.5),
+        tip: '나누어 준 떡의 총 무게를 먼저 곱셈으로 구한 뒤 전체 무게에서 뺍니다!'
+      };
+    },
+    () => {
+      const totalPages = [120, 160, 200][rand(0, 2)];
+      const day1Pages = totalPages / 4;
+      const remainPages = totalPages - day1Pages;
+      const day2Pages = (remainPages * 4) / 9;
+      const totalRead = Math.round(day1Pages + day2Pages);
+      const correct = `${totalRead}`;
+      return {
+        tag: '실생활 문장제',
+        text: `수아는 ${totalPages}쪽짜리 책의 ${formatFrac(0, 1, 4)}을 어제 읽고, 오늘은 남은 것의 ${formatFrac(0, 4, 9)}를 읽었습니다. 어제와 오늘 읽은 책은 모두 몇 쪽일까요?`,
+        correct: correct,
+        options: [correct, `${Math.round(day1Pages)}`, `${Math.round(day2Pages)}`, `${totalPages / 2}`].sort(() => Math.random() - 0.5),
+        tip: '어제 읽은 쪽수와 남은 쪽수 중 오늘 읽은 쪽수를 차례대로 구합니다!'
+      };
+    },
+    () => {
+      const w = rand(2, 3), d = [4, 6][rand(0, 1)], n = 1, times = [2, 3][rand(0, 1)];
+      const correct = simplifyToHtml((w * d + n) * times, d);
+      return {
+        tag: '실생활 문장제',
+        text: `민아는 매일 ${formatFrac(w, n, d)}km씩 걸어 운동합니다. 민아가 ${times}일 동안 걸은 전체 거리는 몇 km일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(w * times, n, d), `${w * times}`, simplifyToHtml((w * d + n) * times + 2, d)].sort(() => Math.random() - 0.5),
+        tip: '하루에 걸은 거리에 걸은 날수를 곱합니다!'
+      };
+    },
+    () => {
+      const whole = 1, den = 2, num = 1;
+      const drinkDen = [3, 4][rand(0, 1)], drinkNum = 2;
+      const correct = simplifyToHtml((whole * den + num) * drinkNum, den * drinkDen);
+      return {
+        tag: '실생활 문장제',
+        text: `주스 ${formatFrac(whole, num, den)}L의 ${formatFrac(0, drinkNum, drinkDen)}를 동생이 마셨습니다. 동생이 마신 주스의 양은 몇 L일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(0, drinkNum, drinkDen), simplifyToHtml(num * drinkNum, den * drinkDen), `${whole}`].sort(() => Math.random() - 0.5),
+        tip: '전체 양에 마신 비율을 곱해줍니다! 대분수는 가분수로 먼저 바꾸세요.'
+      };
+    },
+    () => {
+      const whole = 2, den = 3, num = 1;
+      const usedDen = 4, usedNum = 3;
+      const correct = simplifyToHtml((whole * den + num) * usedNum, den * usedDen);
+      return {
+        tag: '실생활 문장제',
+        text: `밀가루 ${formatFrac(whole, num, den)}kg 중 ${formatFrac(0, usedNum, usedDen)}을 빵을 만드는 데 썼습니다. 빵을 만드는 데 쓴 밀가루는 몇 kg일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(0, usedNum, usedDen), simplifyToHtml((whole * den + num) + usedNum, den * usedDen), `${whole}`].sort(() => Math.random() - 0.5),
+        tip: '전체 무게에 사용한 분수 비율을 곱합니다!'
+      };
+    },
+    () => {
+      const w = [10, 12, 15][rand(0, 2)], d = [2, 4, 5][rand(0, 2)], n = 1;
+      const liters = rand(2, 4);
+      const correct = simplifyToHtml((w * d + n) * liters, d);
+      return {
+        tag: '실생활 문장제',
+        text: `휘발유 1L로 ${formatFrac(w, n, d)}km를 달리는 자동차가 있습니다. 휘발유 ${liters}L로 달릴 수 있는 거리는 몇 km일까요?`,
+        correct: correct,
+        options: [correct, `${w * liters}`, formatFrac(w * liters, n, d), `${w + liters}`].sort(() => Math.random() - 0.5),
+        tip: '1L당 갈 수 있는 거리에 휘발유의 양을 곱합니다!'
+      };
+    },
+    () => {
+      const w = 1, d = [3, 4, 5][rand(0, 2)], n = 2;
+      const cans = rand(3, 5);
+      const correct = simplifyToHtml((w * d + n) * cans, d);
+      return {
+        tag: '실생활 문장제',
+        text: `페인트 1통으로 벽 ${formatFrac(w, n, d)}㎡를 칠할 수 있습니다. 페인트 ${cans}통으로 칠할 수 있는 벽의 넓이는 몇 ㎡일까요?`,
+        correct: correct,
+        options: [correct, `${w * cans}`, formatFrac(w * cans, n, d), simplifyToHtml((w * d + n) * cans + 1, d)].sort(() => Math.random() - 0.5),
+        tip: '1통으로 칠하는 넓이에 페인트 통 수를 곱해줍니다!'
+      };
+    },
+    () => {
+      const total = [20, 30, 40][rand(0, 2)];
+      const d = [4, 5, 10][rand(0, 2)], n = 3;
+      const correct = `${(total * n / d)}`;
+      return {
+        tag: '실생활 문장제',
+        text: `들이가 ${total}L인 수조에 물이 전체의 ${formatFrac(0, n, d)}만큼 채워져 있습니다. 수조에 채워진 물의 양은 몇 L일까요?`,
+        correct: correct,
+        options: [correct, `${total / 2}`, `${(total * (n - 1) / d)}`, `${total}`].sort(() => Math.random() - 0.5),
+        tip: '전체 들이에 물이 채워진 비율을 곱합니다!'
+      };
+    },
+    () => {
+      const d = [4, 5, 8][rand(0, 2)], n = 3, laps = [4, 6, 8][rand(0, 2)];
+      const correct = simplifyToHtml(n * laps, d);
+      return {
+        tag: '실생활 문장제',
+        text: `운동장 한 바퀴의 길이는 ${formatFrac(0, n, d)}km입니다. 정우가 운동장을 ${laps}바퀴 돌았을 때 달린 전체 거리는 몇 km일까요?`,
+        correct: correct,
+        options: [correct, `${laps}`, simplifyToHtml(n * laps + 1, d), formatFrac(0, n, d)].sort(() => Math.random() - 0.5),
+        tip: '한 바퀴의 길이에 돈 바퀴 수를 곱합니다!'
+      };
+    },
+    () => {
+      const w = [3, 4][rand(0, 1)], d = [2, 4][rand(0, 1)], n = 1;
+      const boxes = rand(3, 5);
+      const correct = simplifyToHtml((w * d + n) * boxes, d);
+      const fruit = ['사과', '배', '복숭아'][rand(0, 2)];
+      return {
+        tag: '실생활 문장제',
+        text: `${fruit} 1상자의 무게는 ${formatFrac(w, n, d)}kg입니다. ${fruit} ${boxes}상자의 전체 무게는 몇 kg일까요?`,
+        correct: correct,
+        options: [correct, `${w * boxes}`, formatFrac(w * boxes, n, d), simplifyToHtml((w * d + n) * boxes + 2, d)].sort(() => Math.random() - 0.5),
+        tip: '한 상자의 무게에 상자 수를 곱해줍니다!'
+      };
+    },
+    () => {
+      const w = 1, d = [2, 4, 5][rand(0, 2)], n = 1;
+      const count = rand(3, 6);
+      const correct = simplifyToHtml((w * d + n) * count, d);
+      return {
+        tag: '실생활 문장제',
+        text: `모형 비행기 1대를 만드는 데 철사 ${formatFrac(w, n, d)}m가 필요합니다. 모형 비행기 ${count}대를 만드는 데 필요한 철사는 몇 m일까요?`,
+        correct: correct,
+        options: [correct, `${w * count}`, formatFrac(w * count, n, d), simplifyToHtml((w * d + n) * count + 1, d)].sort(() => Math.random() - 0.5),
+        tip: '비행기 1대에 드는 길이에 만들 비행기 수를 곱합니다!'
+      };
+    },
+    () => {
+      const d1 = [3, 4][rand(0, 1)], n1 = 2;
+      const d2 = [4, 5][rand(0, 1)], n2 = 3;
+      const correct = simplifyToHtml(n1 * n2, d1 * d2);
+      return {
+        tag: '실생활 문장제',
+        text: `남아있는 피자 ${formatFrac(0, n1, d1)}판의 ${formatFrac(0, n2, d2)}을 먹었습니다. 먹은 피자는 전체 피자의 몇 분의 몇일까요?`,
+        correct: correct,
+        options: [correct, formatFrac(0, n1, d1), formatFrac(0, n2, d2), simplifyToHtml(n1 + n2, d1 + d2)].sort(() => Math.random() - 0.5),
+        tip: '남은 피자의 비율과 그중 먹은 비율을 서로 곱합니다!'
+      };
+    },
+    () => {
+      const totalHours = 24;
+      const d = [3, 4, 6][rand(0, 2)], n = 1;
+      const correct = `${(totalHours * n / d)}`;
+      return {
+        tag: '실생활 문장제',
+        text: `하루 24시간 중 ${formatFrac(0, n, d)}만큼 잠을 잤습니다. 잠을 잔 시간은 몇 시간일까요?`,
+        correct: correct,
+        options: [correct, `${(totalHours * n / d) + 2}`, `${(totalHours * n / d) - 2}`, '12'].sort(() => Math.random() - 0.5),
+        tip: '하루 24시간에 수면 비율을 곱합니다!'
+      };
+    }
+  ];
+
+  function generateUniqueWordQuestions(count) {
+    const pool = [...wordQuestionGenerators];
+    pool.sort(() => Math.random() - 0.5);
+
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      if (i > 0 && i % pool.length === 0) {
+        pool.sort(() => Math.random() - 0.5);
+      }
+      result.push(pool[i % pool.length]());
+    }
+    return result;
+  }
+
+  function hasProfanity(text) {
+    const badWords = [
+      '게이', '레즈', '레즈비언', '트랜스젠더', '남친', '여친',
+      '뻐큐', 'ㅗ', '쌰갈', '샤갈', '니얼굴', '찐따', '찐따새끼',
+      'fuck', 'fck', 'fuk', 'shit', 'bitch', 'bastrd', 'asshole', 'dick', 'pussy',
+      '시발', '씨발', '싯팔', '십팔', '씨바', '씨벌', '씨빨', '찌발', 'ㅅㅂ', 'ㅅㅃ',
+      '지랄', '지랄병', '쥐랄', 'ㅈㄹ',
+      '병신', '뼝신', '븅신', 'ㅂㅅ', 'ㅄ',
+      '개새끼', '새끼', '새키', '섀끼', '쌕끼', 'ㄱㅅㄱ',
+      '존나', '좆나', '줫나', '존마니', 'ㅈㄴ',
+      '좆', '줫', '찌찌', '보지', '자지', '꼬추', '섹스', '색스', '쎅스', '꼴린다', '야동', '야사',
+      '느금마', '느검마', '니엄마', '니아빠', '엠창', '애미', '애비', 'ㅁㅊ',
+      '한남', '맘충', '틀딱', '장애인', '짱깨', '쪽발이',
+      '야르', '야발', '야기분좋다', '노무', '잼민이', '억까', '억빠'
+    ];
+    const clean = text.replace(/[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]/g, '').toLowerCase();
+    if (clean === '찐') return true;
+    for (let word of badWords) {
+      if (clean.includes(word.replace(/\s+/g, '').toLowerCase())) return true;
+    }
+    return false;
+  }
+
+  // 전역 상태
+  let totalCount = 20;
+  let currentMode = 3;
+  let timePerQuestion = 30000;
+  let questionList = [];
+  let currentIndex = 0;
+  let score = 0;
+  let combo = 0;
+  let maxCombo = 0;
+  let correctCount = 0;
+  let timerId = null;
+  let startTime = 0;
+  let isAnswered = false;
+
+  let totalSpeedBonusEarned = 0;
+  let totalElapsedTimes = 0;
+  let totalPenaltyDeducted = 0;
+
+  let currentUserId = 'guest';
+  let currentUserPw = '';
+  let currentNick = '익명';
+  let currentRegion = '부산';
+  let currentBestScore = 0;
+
+  let currentHofFilter = 'ALL';
+  let wrongList = [];
+  let currentHofListener = null;
+
+  function openAuthModal() {
+    document.getElementById('modal-auth').style.display = 'flex';
+    const savedId = localStorage.getItem('ch2_saved_id') || '';
+    const savedPw = localStorage.getItem('ch2_saved_pw') || '';
+    
+    document.getElementById('auth-id').value = savedId;
+    document.getElementById('auth-pw').value = savedPw;
+    document.getElementById('auth-status-msg').innerText = '';
+    
+    if (savedId.length >= 4 && savedPw.length === 4) {
+      handleAuthInput();
+    } else {
+      document.getElementById('auth-nick').value = '';
+      document.getElementById('auth-nick').readOnly = false;
+    }
+  }
+
+  function closeAuthModal() {
+    document.getElementById('modal-auth').style.display = 'none';
+  }
+
+  let authDebounce = null;
+  function handleAuthInput() {
+    clearTimeout(authDebounce);
+    authDebounce = setTimeout(() => {
+      const rawId = document.getElementById('auth-id').value.trim().toLowerCase();
+      const rawPw = document.getElementById('auth-pw').value.trim();
+      const msgEl = document.getElementById('auth-status-msg');
+      const nickInput = document.getElementById('auth-nick');
+      const regionSelect = document.getElementById('auth-region');
+
+      if (rawId.length < 4 || rawId.length > 10 || rawPw.length !== 4) {
+        msgEl.innerText = '';
+        nickInput.readOnly = false;
+        return;
+      }
+
+      if (!db) { msgEl.innerText = OFFLINE_MSG; msgEl.style.color = '#F87171'; return; }
+      msgEl.innerText = '🔍 계정 확인 중...';
+      msgEl.style.color = '#A78BFA';
+
+      db.ref('ch2_users/' + rawId).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+          const u = snapshot.val();
+          if (u.pw === rawPw) {
+            playSound('pop');
+            nickInput.value = u.name;
+            nickInput.readOnly = true;
+            regionSelect.value = u.region || '부산';
+
+            msgEl.innerHTML = `✨ <b>또잉!</b> [${u.name}]님 확인 완료! (최고 점수: ${(u.bestScore || 0).toLocaleString()}점)`;
+            msgEl.style.color = '#34D399';
+          } else {
+            msgEl.innerText = '❌ 비밀번호가 맞지 않습니다!';
+            msgEl.style.color = '#EF4444';
+            nickInput.readOnly = false;
+          }
+        } else {
+          msgEl.innerText = '🆕 신규 아이디입니다! 닉네임과 지역을 정해주세요.';
+          msgEl.style.color = '#38BDF8';
+          nickInput.readOnly = false;
+        }
+      });
+    }, 250);
+  }
+
+  function verifyAccountAndStart() {
+    const rawId = document.getElementById('auth-id').value.trim();
+    const rawPw = document.getElementById('auth-pw').value.trim();
+    const rawNick = document.getElementById('auth-nick').value.trim();
+    const region = document.getElementById('auth-region').value;
+
+    if (!/^[a-zA-Z0-9]{4,10}$/.test(rawId)) {
+      alert('🚨 아이디는 [영문·숫자 4~10자]로 입력해 주세요! (예: math1, hero77)');
+      return;
+    }
+
+    if (!/^[0-9]{4}$/.test(rawPw)) {
+      alert('🚨 비밀번호는 [숫자 4자리]로 입력해 주세요! (예: 1234)');
+      return;
+    }
+
+    if (!rawNick) {
+      alert('🚨 닉네임을 입력해 주세요!');
+      return;
+    }
+
+    if (!/^[가-힣0-9]{1,4}$/.test(rawNick)) {
+      alert('🚨 닉네임은 1~4자의 [한글]과 [숫자]만 사용할 수 있습니다!\n(영문, 공백, 기호 불가)');
+      return;
+    }
+
+    if (hasProfanity(rawNick)) {
+      alert('🚨 닉네임에 부적절하거나 장난스러운 단어가 포함되어 있습니다.');
+      return;
+    }
+
+    if (!db) { alert(OFFLINE_MSG); return; }
+    const userId = rawId.toLowerCase();
+    localStorage.setItem('ch2_saved_id', userId);
+    localStorage.setItem('ch2_saved_pw', rawPw);
+
+    db.ref('ch2_users/' + userId).once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        if (userData.pw !== rawPw) {
+          alert('🚨 이미 등록된 아이디입니다! 비밀번호 4자리가 일치하지 않습니다.');
+          return;
+        }
+        currentUserId = userId;
+        currentUserPw = rawPw;
+        currentNick = userData.name || rawNick;
+        currentRegion = userData.region || region;
+        currentBestScore = userData.bestScore || 0;
+      } else {
+        currentUserId = userId;
+        currentUserPw = rawPw;
+        currentNick = rawNick;
+        currentRegion = region;
+        currentBestScore = 0;
+
+        db.ref('ch2_users/' + userId).set({
+          id: userId,
+          pw: rawPw,
+          name: rawNick,
+          region: region,
+          bestScore: 0
+        });
+      }
+
+      closeAuthModal();
+      selectAndStartMode(3);
+    });
+  }
+
+  function selectAndStartMode(mode) {
+    currentMode = mode;
+    questionList = [];
+    wrongList = [];
+    totalSpeedBonusEarned = 0;
+    totalElapsedTimes = 0;
+    totalPenaltyDeducted = 0;
+
+    if (mode === 1) {
+      totalCount = 20;
+      timePerQuestion = 30000;
+      currentNick = '연습생';
+      document.getElementById('mode-title-badge').innerText = '[1모드 분수연산 20제]';
+      for (let i = 0; i < 20; i++) questionList.push(genFractionCalcQ());
+    } else if (mode === 2) {
+      totalCount = 15;
+      timePerQuestion = 40000;
+      currentNick = '연습생';
+      document.getElementById('mode-title-badge').innerText = '[2모드 문장제 15제]';
+      questionList = generateUniqueWordQuestions(15);
+    } else {
+      totalCount = 20;
+      timePerQuestion = 30000;
+      document.getElementById('mode-title-badge').innerText = `[${currentRegion}: ${currentNick}]`;
+      for (let i = 0; i < 12; i++) questionList.push(genFractionCalcQ());
+      const words = generateUniqueWordQuestions(8);
+      words.forEach(w => questionList.push(w));
+      questionList.sort(() => Math.random() - 0.5);
+    }
+
+    currentIndex = 0;
+    score = 0;
+    combo = 0;
+    maxCombo = 0;
+    correctCount = 0;
+
+    document.getElementById('total-q').innerText = totalCount;
+    document.getElementById('view-intro').style.display = 'none';
+    document.getElementById('view-result').style.display = 'none';
+    document.getElementById('view-play').style.display = 'block';
+
+    updateDash();
+    loadNextQuestion();
+  }
+
+  function switchTab(tab) {
+    clearInterval(timerId);
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', (tab === 'game' && i === 0) || (tab === 'hof' && i === 1) || (tab === 'dict' && i === 2));
+    });
+    document.getElementById('tab-game').style.display = (tab === 'game') ? 'flex' : 'none';
+    document.getElementById('tab-hof').style.display = (tab === 'hof') ? 'block' : 'none';
+    document.getElementById('tab-dict').style.display = (tab === 'dict') ? 'block' : 'none';
+
+    if (tab === 'hof') {
+      loadLeaderboardByFilter(currentHofFilter);
+    }
+    if (tab === 'game') resetGame();
+  }
+
+  function resetGame() {
+    clearInterval(timerId);
+    document.getElementById('view-intro').style.display = 'block';
+    document.getElementById('view-play').style.display = 'none';
+    document.getElementById('view-result').style.display = 'none';
+  }
+
+  function updateDash() {
+    document.getElementById('cur-q').innerText = currentIndex + 1;
+    document.getElementById('cur-score').innerText = `${score}점`;
+    document.getElementById('cur-combo').innerText = combo >= 2 ? `🔥 ${combo} COMBO!` : '';
+  }
+
+  function loadNextQuestion() {
+    if (currentIndex >= totalCount) {
+      showFinalResult();
+      return;
+    }
+
+    isAnswered = false;
+    document.getElementById('feedback-bar').style.display = 'none';
+
+    const currentQ = questionList[currentIndex];
+    document.getElementById('q-tag').innerText = currentQ.tag;
+    document.getElementById('q-text').innerHTML = currentQ.text;
+
+    const optBox = document.getElementById('opt-container');
+    optBox.innerHTML = '';
+    currentQ.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = opt;
+      btn.onclick = () => onSelectAnswer(opt, btn);
+      optBox.appendChild(btn);
+    });
+
+    updateDash();
+    startCountDown();
+  }
+
+  function startCountDown() {
+    clearInterval(timerId);
+    startTime = Date.now();
+    const bar = document.getElementById('timer-bar');
+    const timerSecEl = document.getElementById('val-timer-sec');
+    const speedBonusEl = document.getElementById('val-speed-bonus');
+    bar.style.width = '100%';
+
+    timerId = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remainPercent = Math.max(0, 100 - (elapsed / timePerQuestion) * 100);
+      const remainSec = Math.max(0, Math.ceil((timePerQuestion - elapsed) / 1000));
+      const currentSpeedPotential = Math.round(Math.max(0, (timePerQuestion - elapsed) / timePerQuestion) * 100);
+
+      bar.style.width = `${remainPercent}%`;
+      timerSecEl.innerText = `${remainSec}초`;
+      speedBonusEl.innerText = `+${currentSpeedPotential}점`;
+
+      if (elapsed >= timePerQuestion) {
+        clearInterval(timerId);
+        onSelectAnswer(null, null);
+      }
+    }, 50);
+  }
+
+  function onSelectAnswer(userChoice, clickedBtn) {
+    if (isAnswered) return;
+    isAnswered = true;
+    clearInterval(timerId);
+
+    const q = questionList[currentIndex];
+    const elapsed = Date.now() - startTime;
+    totalElapsedTimes += (elapsed / 1000);
+
+    const remainRatio = Math.max(0, (timePerQuestion - elapsed) / timePerQuestion);
+    const feedback = document.getElementById('feedback-bar');
+    feedback.style.display = 'block';
+
+    const isCorrect = (userChoice === q.correct);
+
+    if (clickedBtn) {
+      clickedBtn.classList.add(isCorrect ? 'correct-glow' : 'wrong-glow');
+    }
+
+    if (isCorrect) {
+      playSound('correct');
+      correctCount++;
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+
+      const speedBonus = Math.round(remainRatio * 100);
+      totalSpeedBonusEarned += speedBonus;
+
+      const comboBonus = (combo - 1) * 15;
+      const gain = 100 + speedBonus + comboBonus;
+      score += gain;
+
+      feedback.className = 'feedback-toast score-up';
+      feedback.innerHTML = `⚡ <b>정답! +${gain}점</b> <span style="font-size:0.85rem; font-weight:normal;">(기본 100 + ⚡속도 +${speedBonus})</span>`;
+    } else {
+      playSound('wrong');
+      combo = 0;
+      score = Math.max(0, score - 50);
+      totalPenaltyDeducted += 50;
+
+      wrongList.push({
+        text: q.text,
+        userChoice: userChoice !== null ? userChoice : '⏰ 시간 초과',
+        correct: q.correct,
+        tip: q.tip
+      });
+
+      const optButtons = document.querySelectorAll('.opt-btn');
+      optButtons.forEach(b => {
+        if (b.innerHTML === q.correct) {
+          b.classList.add('correct-glow');
+        }
+      });
+
+      feedback.className = 'feedback-toast score-down';
+      feedback.innerHTML = `❌ <b>-50점!</b> (정답: <b>${q.correct}</b>)`;
+    }
+
+    updateDash();
+    currentIndex++;
+
+    const nextDelay = isCorrect ? 650 : 750;
+    setTimeout(loadNextQuestion, nextDelay);
+  }
+
+  function submitScoreIfBest(finalScore, region) {
+    if (!db) {
+      document.getElementById('res-nat-rank').innerText = '연결 안 됨';
+      document.getElementById('res-reg-rank').innerText = '연결 안 됨';
+      return;
+    }
+    const isNewRecord = finalScore > currentBestScore;
+    const bestToSave = isNewRecord ? finalScore : currentBestScore;
+
+    if (isNewRecord) {
+      currentBestScore = finalScore;
+    }
+    document.getElementById('res-best').innerText = `${currentBestScore.toLocaleString()}점 ${isNewRecord ? '🔥(새 기록!)' : ''}`;
+
+    const recordData = {
+      id: currentUserId,
+      name: currentNick,
+      region: region,
+      score: bestToSave,
+      rank: document.getElementById('res-rank').innerText,
+      timestamp: Date.now(),
+      dateStr: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updates = {};
+    updates['/ch2_users/' + currentUserId + '/bestScore'] = bestToSave;
+    updates['/ch2_rank_all/' + currentUserId] = recordData;
+    updates['/ch2_rank_regions/' + region + '/' + currentUserId] = recordData;
+
+    db.ref().update(updates).then(() => {
+      db.ref('ch2_rank_all').orderByChild('score').limitToLast(100).once('value').then(snapAll => {
+        let allRecs = [];
+        snapAll.forEach(c => allRecs.push(c.val()));
+        allRecs.sort((a, b) => b.score - a.score);
+
+        const natIdx = allRecs.findIndex(r => r.id === currentUserId);
+        document.getElementById('res-nat-rank').innerText = natIdx !== -1 ? `${natIdx + 1}위` : '100위 밖';
+
+        db.ref('ch2_rank_regions/' + region).orderByChild('score').limitToLast(100).once('value').then(snapReg => {
+          let regRecs = [];
+          snapReg.forEach(c => regRecs.push(c.val()));
+          regRecs.sort((a, b) => b.score - a.score);
+
+          const regIdx = regRecs.findIndex(r => r.id === currentUserId);
+          document.getElementById('res-reg-rank').innerText = regIdx !== -1 ? `${regIdx + 1}위` : '100위 밖';
+        });
+      });
+    });
+  }
+
+  function showFinalResult() {
+    clearInterval(timerId);
+    document.getElementById('view-play').style.display = 'none';
+    document.getElementById('view-result').style.display = 'block';
+
+    const avgSpeed = (totalCount > 0) ? (totalElapsedTimes / totalCount).toFixed(1) : 0;
+    const totalComboBonus = score - (correctCount * 100) - totalSpeedBonusEarned + totalPenaltyDeducted;
+
+    document.getElementById('res-name').innerText = currentMode === 3 ? `[${currentRegion}] ${currentNick} (${currentUserId})` : currentNick;
+    document.getElementById('res-correct-txt').innerText = `${correctCount} / ${totalCount} (기본 ${(correctCount * 100)}점)`;
+    document.getElementById('res-speed-txt').innerText = `+${totalSpeedBonusEarned.toLocaleString()}점 (평균 ${avgSpeed}초)`;
+    document.getElementById('res-combo-txt').innerText = `+${Math.max(0, totalComboBonus).toLocaleString()}점 (${maxCombo} COMBO)`;
+    document.getElementById('res-penalty-txt').innerText = `-${totalPenaltyDeducted}점 (${wrongList.length}개 오답)`;
+    document.getElementById('res-score').innerText = `${score.toLocaleString()}점`;
+
+    let rank = 'C';
+    let color = '#94A3B8';
+
+    if (totalCount === 20) {
+      if (correctCount === 20 && totalSpeedBonusEarned >= 1000) { rank = 'SSS'; color = '#F43F5E'; }
+      else if (correctCount >= 18) { rank = 'SS'; color = '#EC4899'; }
+      else if (correctCount >= 16) { rank = 'S'; color = '#FACC15'; }
+      else if (correctCount >= 14) { rank = 'A'; color = '#8B5CF6'; }
+      else if (correctCount >= 11) { rank = 'B'; color = '#34D399'; }
+      else { rank = 'C'; color = '#94A3B8'; }
+    } else {
+      if (correctCount === 15) { rank = 'SSS'; color = '#F43F5E'; }
+      else if (correctCount >= 14) { rank = 'SS'; color = '#EC4899'; }
+      else if (correctCount >= 12) { rank = 'S'; color = '#FACC15'; }
+      else if (correctCount >= 10) { rank = 'A'; color = '#8B5CF6'; }
+      else if (correctCount >= 8) { rank = 'B'; color = '#34D399'; }
+      else { rank = 'C'; color = '#94A3B8'; }
+    }
+
+    const rankEl = document.getElementById('res-rank');
+    rankEl.innerText = rank;
+    rankEl.style.color = color;
+    rankEl.style.textShadow = `0 0 25px ${color}`;
+
+    // 오답노트 렌더링
+    const wrongTitleEl = document.getElementById('wrong-note-title');
+    const wrongContainer = document.getElementById('wrong-note-list');
+    wrongContainer.innerHTML = '';
+
+    if (wrongList.length === 0) {
+      wrongTitleEl.innerText = '📝 오답노트 (오답 없음)';
+      wrongTitleEl.style.color = '#34D399';
+      wrongContainer.innerHTML = '<p style="text-align:center; color:#34D399; padding:20px; font-weight:bold; font-size:1.05rem;">🎉 대단해요! 틀린 문제가 하나도 없습니다! (완벽한 만점)</p>';
+    } else {
+      wrongTitleEl.innerText = `📝 오답노트 (총 ${wrongList.length}문제를 틀렸습니다)`;
+      wrongTitleEl.style.color = '#F87171';
+
+      wrongList.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'wrong-item';
+        div.innerHTML = `
+          <div class="wrong-q-txt">${idx + 1}. ${item.text}</div>
+          <div class="wrong-ans-row">
+            <span style="color:#F87171;">❌ 내가 고른 답: <b>${item.userChoice}</b></span>
+            <span style="color:#34D399;">⭕ 정답: <b>${item.correct}</b></span>
+          </div>
+          <div class="wrong-tip-txt">💡 <b>풀이 팁:</b> ${item.tip}</div>
+        `;
+        wrongContainer.appendChild(div);
+      });
+    }
+
+    if (currentMode === 3) {
+      document.getElementById('practice-complete-msg').style.display = 'none';
+      document.getElementById('btn-see-hof').style.display = 'block';
+      document.getElementById('dual-rank-section').style.display = 'flex';
+      document.getElementById('res-my-region').innerText = `${currentRegion} 지역`;
+      document.getElementById('res-nat-rank').innerText = '집계 중...';
+      document.getElementById('res-reg-rank').innerText = '집계 중...';
+
+      submitScoreIfBest(score, currentRegion);
+    } else {
+      document.getElementById('practice-complete-msg').style.display = 'block';
+      document.getElementById('btn-see-hof').style.display = 'none';
+      document.getElementById('dual-rank-section').style.display = 'none';
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goToHofAfterGame() {
+    if (currentRegion) {
+      setHofRegion(currentRegion);
+    }
+    switchTab('hof');
+  }
+
+  function loadLeaderboardByFilter(reg) {
+    if (!db) {
+      document.getElementById('hof-list').innerHTML = `<p style="text-align:center; color:#F87171; padding:30px;">${OFFLINE_MSG}</p>`;
+      return;
+    }
+    if (currentHofListener) {
+      currentHofListener.off();
+    }
+
+    let queryRef;
+    if (reg === 'ALL') {
+      queryRef = db.ref('ch2_rank_all').orderByChild('score').limitToLast(100);
+    } else {
+      queryRef = db.ref('ch2_rank_regions/' + reg).orderByChild('score').limitToLast(100);
+    }
+
+    currentHofListener = queryRef;
+    document.getElementById('hof-list').innerHTML = '<p style="text-align:center; color:#94A3B8; padding:30px;">⏳ 랭킹을 불러오는 중...</p>';
+
+    // 8초 안에 응답이 없으면 연결 문제 안내
+    const slowTimer = setTimeout(() => {
+      document.getElementById('hof-list').innerHTML = '<p style="text-align:center; color:#F87171; padding:30px;">⚠️ 서버 응답이 없습니다.<br>네트워크 차단 또는 Firebase 설정 문제일 수 있어요.<br><small>(F12 → Console의 오류 메시지를 확인해 주세요)</small></p>';
+    }, 8000);
+
+    currentHofListener.on('value', snapshot => {
+      clearTimeout(slowTimer);
+      let records = [];
+      snapshot.forEach(child => {
+        records.push(child.val());
+      });
+      records.sort((a, b) => b.score - a.score);
+      renderLeaderboardUI(records, reg);
+    }, err => {
+      clearTimeout(slowTimer);
+      console.error('랭킹 읽기 실패:', err);
+      const code = (err && err.code) ? err.code : 'UNKNOWN';
+      const hint = code === 'PERMISSION_DENIED'
+        ? 'Firebase 데이터베이스 <b>규칙(Rules)</b>이 읽기를 막고 있어요. (테스트 모드 기간이 만료됐을 가능성이 커요)'
+        : '네트워크 또는 Firebase 설정을 확인해 주세요.';
+      document.getElementById('hof-list').innerHTML = `<p style="text-align:center; color:#F87171; padding:30px;">🚨 랭킹을 읽지 못했습니다.<br>오류 코드: <b>${code}</b><br><small>${hint}</small></p>`;
+    });
+  }
+
+  function setHofRegion(reg) {
+    currentHofFilter = reg;
+    document.getElementById('hof-region-filter').value = reg;
+
+    const chips = document.querySelectorAll('.region-chip');
+    chips.forEach(chip => {
+      const chipTxt = chip.innerText.replace('🌏 ', '').trim();
+      const targetTxt = (reg === 'ALL') ? '전국' : reg;
+      chip.classList.toggle('active', chipTxt === targetTxt);
+    });
+
+    const titleEl = document.getElementById('hof-viewing-title');
+    if (reg === 'ALL') {
+      titleEl.innerText = '🌏 전국 전체 순위 (TOP 100)';
+    } else {
+      titleEl.innerText = `📍 [${reg}] 지역 순위 (TOP 100)`;
+    }
+
+    loadLeaderboardByFilter(reg);
+  }
+
+  function renderLeaderboardUI(records, reg) {
+    const container = document.getElementById('hof-list');
+    container.innerHTML = '';
+
+    const regionName = (reg === 'ALL') ? '전국' : reg;
+
+    if (!records || records.length === 0) {
+      container.innerHTML = `<p style="text-align:center; color:#64748B; padding:30px;">아직 [${regionName}] 지역에 등록된 랭커가 없습니다.<br>첫 번째 주인공이 되어보세요!</p>`;
+      return;
+    }
+
+    const medals = ['🥇 1위', '🥈 2위', '🥉 3위'];
+    const top100 = records.slice(0, 100);
+
+    top100.forEach((rec, idx) => {
+      const rankTag = idx < 3 ? medals[idx] : `${idx + 1}위`;
+      const row = document.createElement('div');
+      row.className = 'hof-row';
+      row.innerHTML = `
+        <span class="hof-rank" style="color:${idx < 3 ? '#FACC15' : '#94A3B8'};">${rankTag}</span>
+        <span class="hof-region-tag">${rec.region || '기타'}</span>
+        <span class="hof-name">${rec.name} <small style="color:#A78BFA;">[${rec.rank}]</small></span>
+        <span class="hof-score">${rec.score.toLocaleString()}점 <small style="color:#64748B; font-size:0.72rem;">(${rec.dateStr})</small></span>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function autoRecoverToSafeRooms() {
+    if (!db) return;
+    db.ref('ch2_rank_all').limitToFirst(1).once('value').then(snapV2 => {
+      if (!snapV2.exists()) {
+        db.ref('ch2_users').once('value').then(snapOld => {
+          if (!snapOld.exists()) return;
+          const updates = {};
+          snapOld.forEach(child => {
+            const u = child.val();
+            if (u && u.bestScore && u.bestScore > 0) {
+              const recordData = {
+                id: u.id,
+                name: u.name,
+                region: u.region || '기타',
+                score: u.bestScore,
+                rank: 'S',
+                timestamp: Date.now(),
+                dateStr: '복구됨'
+              };
+              updates['/ch2_users/' + u.id] = u;
+              updates['/ch2_rank_all/' + u.id] = recordData;
+              updates['/ch2_rank_regions/' + (u.region || '기타') + '/' + u.id] = recordData;
+            }
+          });
+          if (Object.keys(updates).length > 0) db.ref().update(updates);
+        });
+      }
+    });
+  }
+
+  // 초기 실행
+  if (!db) {
+    const st = document.getElementById('conn-status');
+    if (st) { st.innerText = '랭킹 서버 연결 실패 (1·2모드는 가능)'; st.style.color = '#F87171'; }
+  } else {
+    try { autoRecoverToSafeRooms(); } catch (e) { console.warn(e); }
+  }
+</script>
+</body>
+</html>
